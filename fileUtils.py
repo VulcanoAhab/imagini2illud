@@ -13,7 +13,8 @@ def process_fileData(filePath):
     except IOError:
         print ("[-] Failed to get information about:", filePath)
     else:
-        _data["modified_at"]=datetime.datetime.fromtimestamp(fileData.st_mtime)
+        dateMod=datetime.datetime.fromtimestamp(fileData.st_mtime)
+        _data["modified_at"]=dateMod.strftime("%Y-%m-%d")
     return _data
 
 

@@ -7,7 +7,7 @@ class ImaginiReport:
     """
     """
     @staticmethod
-    def _doLines(textIn, width=55):
+    def _doLines(textIn, width=75):
         """
         """
 
@@ -19,11 +19,7 @@ class ImaginiReport:
 
             init=rangis*(n-1)
             end=rangis*n
-
-            print("00000", n, init, end, textLen)
-
             if end > textLen:
-                print("BREAAAAAKING", end, textLen)
                 end=textLen
                 yield textIn[init:end]
                 break
@@ -39,21 +35,38 @@ class ImaginiReport:
         self.canvas.setFont('Helvetica', 10)
 
 
+    def _prepare_forItem(self, yPosition, lineSize=15):
+        """
+        """
+        yPosition-=lineSize
+        if yPosition <= 40:
+            self.canvas.showPage()
+            yPosition=730
+        return yPosition
 
     def saveData(self, fullData):
         """
         """
-        ystart=750
-        ypos=ystart
-        self.canvas.drawString(10,ystart,"## IMAGE: {}".format(fullData["path"]))
-        ypos-=20
-        self.canvas.drawString(10,ypos,"## TEXT")
+        yStart=750
+        yPos=yStart
+        xTitle=10
+        xIdent1=20
+
+        imgMsg="## Image: {}".format(fullData["path"])
+        self.canvas.drawString(xTitle,yStart,imgMsg)
+        yPos=self._prepare_forItem(yPos, lineSize=30)
+
+        self.canvas.drawString(xTitle,yPos,"## Text")
         for line in ImaginiReport._doLines(fullData["text"]):
-            ypos-=15
-            self.canvas.drawString(35,ypos,line)
-            if ypos <= 40:
-                self.canvas.showPage()
-                ypos=730
+            yPos=self._prepare_forItem(yPos)
+            self.canvas.drawString(xIdent1,yPos,line)
+
+        yPos=self._prepare_forItem(yPos,lineSize=30)
+        self.canvas.drawString(xTitle,yPos,"## Modified_at")
+        yPos=self._prepare_forItem(yPos)
+        modAt=fullData["fileData"].get("modified_at")
+        self.canvas.drawString(xIdent1,yPos,modAt)
+
         self.canvas.showPage()
 
     def close(self):
