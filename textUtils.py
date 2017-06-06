@@ -2,15 +2,7 @@ import re
 import tldextract
 from multiprocessing import Process, Manager
 
-rexUr=re.compile(r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+")
-extract=tldextract.TLDExtract(suffix_list_urls=None)
 
-def mineDomain(urlIn):
-    """
-    """
-    _extract=extract(urlIn)
-    _exObj=_extract.domain
-    return _exObj
 
 def buildRexList(valuesList):
     """
@@ -27,7 +19,7 @@ def doMacht(imageText, rexFunc, label, values, resultList):
     data={"label":label, "values":values, "match":[]}
     normValues=[v.strip().lower() for v in values if v]
     mets=[m for m in rexFunc.findall(imageText)
-          if m.lower().strip() not in normValues]
+          if m.lower().strip() in normValues]
     data["match"]=mets
     resultList.append(data)
 
@@ -37,7 +29,7 @@ def processCategories(imageText, subDirCats):
     simple, very simple... just to start.
     """
     labels=list(subDirCats.keys())
-    targetValues=list(subDirCats.values())
+    targetValues=[subDirCats[label] for label in labels]
     rexFuncList=buildRexList(targetValues)
     manager=Manager()
     resultList=manager.list()
@@ -54,12 +46,39 @@ def processCategories(imageText, subDirCats):
 
 def processFeatures(textIn):
     """
+    this should suit each process need
+    right now screenshots from known sites
+    and whois records
     """
-    fs={}
-    urls=[url for url in rexUr.findall(textIn[:300]) if url]
-    if not urls: return fs
+    #vars
+    specialDict={}
+
+    #helpers
+    rexUr=re.compile(r"\b([^@](?:(?:[a-z0-9\-:]+)+\.)(?:[a-z]{2,4}))\/\S+", re.I)
+    rexDomain=re.compile(r"record\s+created", re.I)
+
+    def mineDomain(urlIn):
+        """
+        """
+        extract=tldextract.TLDExtract(suffix_list_urls=None)
+        _extract=extract(urlIn)
+        _exObj=_extract.domain
+        return _exObj
+
+    #only headers text
+    targetText=textIn[:150].replace("l<", "k").replace("|", "BAR")
+    features=rexUr.findall(targetText)
+    urls=[url for url in features  if url]
+    if not urls:
+        whois=[r for r in rexDomain.findall(textIn) if r]
+        if whois:
+            specialDict["domain"]="domaintools"
+        return specialDict
     domains=[mineDomain(url) for url in urls]
-    fs["domain"]=domains[0]
-    if "l<" in fs["domain"]:
-        fs["domain"]=fs["domain"].replace("l<", "k")
-    return fs
+
+    #test result
+    if (len(domains[0]) <= 3
+        or domains[0].replace(".","").isdigit()):
+        return specialDict
+    specialDict["domain"]=domains[0]
+    return specialDict

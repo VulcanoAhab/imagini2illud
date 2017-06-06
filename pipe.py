@@ -1,3 +1,4 @@
+import traceback
 import shutil
 import json
 import os
@@ -38,6 +39,8 @@ class FileSequence:
     def run(self):
         """
         """
+
+
         #image To Text
         self._data["text"]=process_screenShot(self._data["filePath"])
         if not self._data["text"]:
@@ -92,7 +95,8 @@ class ProjectSequence:
         fileName="_".join([self.proj, "report.pdf"])
         imDex=ImaginiReport(self.proj, fileName)
 
-        for f in files:
+        for f in files[:3]:
+
 
             newFile=None
             newData={}
@@ -101,13 +105,15 @@ class ProjectSequence:
             try:
                 seq=FileSequence(filePath, self.proj, self._catsData)
                 seq.run()
-                if not seq.path:continue
+                if not seq.path:
+                    print("No pathis")
+                    continue
                 newFile=seq.path
                 newData=seq.data
                 imDex.saveData(newData)
             except Exception as e:
                 print("[-] Fail to process image: {}".format(filePath))
-                print("    Error:", e)
+                traceback.print_exc()
                 continue
 
             print("[+] Finished processing image: {}".format(newFile))
