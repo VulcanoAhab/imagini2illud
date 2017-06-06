@@ -86,7 +86,7 @@ class ProjectSequence:
             catName:catValues
         })
 
-    def run(self):
+    def run(self, limitSize=None):
         """
         """
         filesString="\n".join(os.listdir(self.source))
@@ -94,14 +94,12 @@ class ProjectSequence:
         #pdf canvas
         fileName="_".join([self.proj, "report.pdf"])
         imDex=ImaginiReport(self.proj, fileName)
-
-        for f in files[:3]:
-
-
+        if limitSize:
+            files=files[:limitSize]
+        for f in files:
             newFile=None
             newData={}
             filePath=os.path.join(self.source, f)
-
             try:
                 seq=FileSequence(filePath, self.proj, self._catsData)
                 seq.run()
@@ -115,9 +113,7 @@ class ProjectSequence:
                 print("[-] Fail to process image: {}".format(filePath))
                 traceback.print_exc()
                 continue
-
             print("[+] Finished processing image: {}".format(newFile))
-
         #save pdf
         imDex.close()
         print("[+] Done mapping images and producing report")
