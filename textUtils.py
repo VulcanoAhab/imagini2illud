@@ -9,7 +9,7 @@ def buildRexList(valuesList):
     """
     rexList=[]
     for values in valuesList:
-        rex="\\b"+"\\b|\\b".join(values)+"\\b"
+        rex="\\b"+"\\b|\\b".join([re.escape(v) for v in values])+"\\b"
         rexList.append(re.compile(rex, re.I))
     return rexList
 
@@ -31,18 +31,26 @@ def processCategories(imageText, subDirCats):
     labels=list(subDirCats.keys())
     targetValues=[subDirCats[label] for label in labels]
     rexFuncList=buildRexList(targetValues)
-    manager=Manager()
-    resultList=manager.list()
-    processis=[]
+    # manager=Manager()
+    # resultList=manager.list()
+    #processis=[]
+    resultList=[]
     for n,rexFunc in enumerate(rexFuncList):
         _args=[imageText, rexFunc, labels[n],
                targetValues[n], resultList]
-        p=Process(target=doMacht, args=_args)
-        p.start()
-        processis.append(p)
-    for p in processis:p.join()
+        doMacht(*_args)
+    #     p=Process(target=doMacht, args=_args)
+    #     p.start()
+    #     processis.append(p)
+    # for p in processis:p.join()
     return resultList
 
+
+### ----
+#helpers
+
+rexUr=re.compile(r"([^@](?:(?:[a-z0-9\-:]+)+\.)(?:[a-z]{2,4}))\/\S+", re.I)
+rexDomain=re.compile(r"record\s+created", re.I)
 
 def processFeatures(textIn):
     """
@@ -54,8 +62,8 @@ def processFeatures(textIn):
     specialDict={}
 
     #helpers
-    rexUr=re.compile(r"\b([^@](?:(?:[a-z0-9\-:]+)+\.)(?:[a-z]{2,4}))\/\S+", re.I)
-    rexDomain=re.compile(r"record\s+created", re.I)
+    # rexUr=re.compile(r"([^@](?:(?:[a-z0-9\-:]+)+\.)(?:[a-z]{2,4}))\/\S+", re.I)
+    # rexDomain=re.compile(r"record\s+created", re.I)
 
     def mineDomain(urlIn):
         """
@@ -67,7 +75,9 @@ def processFeatures(textIn):
 
     #only headers text
     targetText=textIn[:150].replace("l<", "k").replace("|", "BAR")
+    print("\nTARGET TEXT", targetText)
     features=rexUr.findall(targetText)
+    print("FEARTURES", features)
     urls=[url for url in features  if url]
     if not urls:
         whois=[r for r in rexDomain.findall(textIn) if r]

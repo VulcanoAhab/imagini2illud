@@ -13,20 +13,19 @@ def process_image(imagePath, resizeTimes):
     """
     #open
     image=cv2.imread(imagePath).copy()
-    #convert to gray -> binary
-    image=cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    #ret,image2 = cv2.threshold(image,127,255,cv2.THRESH_BINARY_INV)
+    #convert to gray
+    grayImage=cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     #resize
-    height,width=image.shape[:2]
-    newSize=(width*resizeTimes, height*resizeTimes)
-    image2=cv2.resize(image, newSize, interpolation=cv2.INTER_LANCZOS4)
+    size=grayImage.shape[:2]
+    newSize=tuple([int(s*resizeTimes) for s in size[::-1]])
+    toImage=cv2.resize(grayImage, newSize)
     #read
-    toTextImage=Image.fromarray(image2)
+    toTextImage=Image.fromarray(toImage)
     text=pytesseract.image_to_string(toTextImage)
     return text
 
 
-def process_screenShot(imagePath, resizeTimes=4):
+def process_screenShot(imagePath, resizeTimes=2.5):
     """
     """
     return process_image(imagePath, resizeTimes)
