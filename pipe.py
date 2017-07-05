@@ -122,7 +122,7 @@ class ProjectSequence:
             newData={}
             filePath=os.path.join(self.source, f)
 
-            print("[+] Starting to process image: {}".format(filePath))
+            print("\n[+] Starting to process image: {}".format(filePath))
 
             try:
                 seq=FileSequence(filePath, self.proj, self._catsData)

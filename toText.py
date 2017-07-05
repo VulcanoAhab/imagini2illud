@@ -25,7 +25,7 @@ def process_image(imagePath, resizeTimes):
     return text
 
 
-def process_screenShot(imagePath, resizeTimes=2.5):
+def process_screenShot(imagePath, resizeTimes=3):
     """
     """
     return process_image(imagePath, resizeTimes)

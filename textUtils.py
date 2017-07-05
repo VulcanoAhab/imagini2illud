@@ -1,5 +1,7 @@
 import re
 import tldextract
+import unicodedata
+import traceback
 from multiprocessing import Process, Manager
 
 
@@ -23,6 +25,25 @@ def doMacht(imageText, rexFunc, label, values, resultList):
     data["match"]=mets
     resultList.append(data)
 
+
+def normalizeText(strIn):
+    """
+    """
+    _normalized = unicodedata.normalize("NFKD", strIn)
+    _ascii = _normalized.encode("ASCII", "ignore").decode()
+    #fix translation errors
+    _final=_ascii.replace("l<", "k").replace("|", "l")
+    #clean string
+    _cleanFinal=cleanRex.sub(_final,"")
+    return _cleanFinal
+
+def mineDomain(urlIn):
+    """
+    """
+    extract=tldextract.TLDExtract(suffix_list_urls=None)
+    _extract=extract(urlIn)
+    _exObj=_extract.domain
+    return _exObj
 
 def processCategories(imageText, subDirCats):
     """
@@ -49,8 +70,9 @@ def processCategories(imageText, subDirCats):
 ### ----
 #helpers
 
-rexUr=re.compile(r"([^@](?:(?:[a-z0-9\-:]+)+\.)(?:[a-z]{2,4}))\/\S+", re.I)
+rexUr=re.compile(r"(?:[^@\s\/](?:[a-z0-9\-:]+)+\.){1,3}(?:[a-z]{2,4})", re.I)
 rexDomain=re.compile(r"record\s+created", re.I)
+cleanRex=re.compile(r"[\'\"\!\<\>\?\(\)\*%\$#`,;]")
 
 def processFeatures(textIn):
     """
@@ -60,35 +82,28 @@ def processFeatures(textIn):
     """
     #vars
     specialDict={}
+    urls=[]
 
     #helpers
     # rexUr=re.compile(r"([^@](?:(?:[a-z0-9\-:]+)+\.)(?:[a-z]{2,4}))\/\S+", re.I)
     # rexDomain=re.compile(r"record\s+created", re.I)
 
-    def mineDomain(urlIn):
-        """
-        """
-        extract=tldextract.TLDExtract(suffix_list_urls=None)
-        _extract=extract(urlIn)
-        _exObj=_extract.domain
-        return _exObj
-
     #only headers text
-    targetText=textIn[:150].replace("l<", "k").replace("|", "BAR")
-    print("\nTARGET TEXT", targetText)
-    features=rexUr.findall(targetText)
-    print("FEARTURES", features)
-    urls=[url for url in features  if url]
-    if not urls:
+    targetText=normalizeText(textIn[:150])
+    try:
+        rexUrls=rexUr.search(targetText)
+        if rexUrls:
+            url=rexUrls.group(0)
+            print("## URL :", url)
+            domain=mineDomain(url)
+            specialDict["domain"]=domain
+    except:
+        print("[-] Fail to mine url")
+        traceback.print_exc()
+        print("[-] Fail to mine url\n")
+
+    else:
         whois=[r for r in rexDomain.findall(textIn) if r]
         if whois:
             specialDict["domain"]="domaintools"
-        return specialDict
-    domains=[mineDomain(url) for url in urls]
-
-    #test result
-    if (len(domains[0]) <= 3
-        or domains[0].replace(".","").isdigit()):
-        return specialDict
-    specialDict["domain"]=domains[0]
     return specialDict
