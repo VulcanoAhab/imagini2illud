@@ -34,7 +34,7 @@ def normalizeText(strIn):
     #fix translation errors
     _final=_ascii.replace("l<", "k").replace("|", "l")
     #clean string
-    _cleanFinal=cleanRex.sub(_final,"")
+    _cleanFinal=cleanRex.sub(_final," ")
     return _cleanFinal
 
 def mineDomain(urlIn):
@@ -83,10 +83,6 @@ def processFeatures(textIn):
     #vars
     specialDict={}
     urls=[]
-
-    #helpers
-    # rexUr=re.compile(r"([^@](?:(?:[a-z0-9\-:]+)+\.)(?:[a-z]{2,4}))\/\S+", re.I)
-    # rexDomain=re.compile(r"record\s+created", re.I)
 
     #only headers text
     targetText=normalizeText(textIn[:150])
